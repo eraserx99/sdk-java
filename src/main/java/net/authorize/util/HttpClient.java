@@ -17,14 +17,17 @@ import net.authorize.Transaction;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.apache.http.Header;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpHost;
 import org.apache.http.HttpResponse;
+import org.apache.http.RequestLine;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.conn.params.ConnRoutePNames;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.protocol.HTTP;
+import org.apache.http.util.EntityUtils;
 
 /**
  * Transportation object used to facilitate the communication with the respective gateway.
@@ -108,6 +111,21 @@ public class HttpClient {
 
 		return responseMap;
 	}
+	
+	/**
+	 * @param h
+	 * @return
+	 */
+	public static String dumpHeader(Header[] h) {
+		StringBuffer s = new StringBuffer();
+		
+		for(Header i : h) {
+			s.append(i.toString());
+			s.append("\r\n");
+		}
+		
+		return s.toString();
+	}
 
 	/**
 	 * Executes a Transaction against a given Environment.
@@ -128,6 +146,13 @@ public class HttpClient {
 				// create the HTTP POST object
 				HttpPost httpPost = createHttpPost(environment, transaction);
 
+				RequestLine reqL = httpPost.getRequestLine();
+				String rl = reqL.toString();
+				
+				Header[] reqH = httpPost.getAllHeaders();
+				HttpEntity reqE = httpPost.getEntity();
+				LogHelper.info(logger, "%s\r\n%s\r\n\r\n%s", rl, dumpHeader(reqH), EntityUtils.toString(reqE));
+
 				// execute the request
 				HttpResponse httpResponse = httpClient.execute(httpPost);
 				String rawResponseString;
@@ -137,6 +162,9 @@ public class HttpClient {
 					// get the raw data being received
 					InputStream instream = entity.getContent();
 					rawResponseString = convertStreamToString(instream);
+					
+					Header[] repH = httpResponse.getAllHeaders();
+					LogHelper.info(logger, "%s\r\n\r\n%s", dumpHeader(repH), rawResponseString);
 				}
 				// handle HTTP errors
 				else {
@@ -218,6 +246,13 @@ public class HttpClient {
 				// create the HTTP POST object
 				HttpPost httpPost = createHttpPost(environment, transaction);
 
+				RequestLine reqL = httpPost.getRequestLine();
+				String rl = reqL.toString();
+				
+				Header[] reqH = httpPost.getAllHeaders();
+				HttpEntity reqE = httpPost.getEntity();
+				LogHelper.info(logger, "%s\r\n%s\r\n\r\n%s", rl, dumpHeader(reqH), EntityUtils.toString(reqE));
+				
 				// execute the request
 				HttpResponse httpResponse = httpClient.execute(httpPost);
 				String rawResponseString;
@@ -227,6 +262,9 @@ public class HttpClient {
 					// get the raw data being received
 					InputStream instream = entity.getContent();
 					rawResponseString = convertStreamToString(instream);
+
+					Header[] repH = httpResponse.getAllHeaders();
+					LogHelper.info(logger, "%s\r\n\r\n%s", dumpHeader(repH), rawResponseString);
 				}
 				else {
 					StringBuilder responseBuilder = new StringBuilder();
